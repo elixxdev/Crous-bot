@@ -1,0 +1,14 @@
+{
+  "_comment_searchUrls": "Colle ici les URLs de recherche APRES avoir appliqué tes filtres (ville, prix, etc.) directement sur le site du CROUS. Voir README pour la méthode. Tu peux mettre plusieurs URLs (ex: plusieurs villes).",
+  "searchUrls": [
+    "https://trouverunlogement.lescrous.fr/tools/42/search?occupationModes=alone&bounds=1.4462445_49.241431_3.5592208_48.1201456&locationName=%C3%8Ele-de-France"
+  ],
+
+  "_comment_criteres": "Ces critères sont un DEUXIEME filtre appliqué par le bot en plus de l'URL, au cas où l'URL ne filtre pas tout. Mets null pour désactiver un critère.",
+  "criteres": {
+    "prixMax": null,
+    "surfaceMin": null,
+    "villesAcceptees": null,
+    "typesAcceptes": null
+  }
+}

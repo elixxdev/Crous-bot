@@ -1,0 +1,39 @@
+name: Scan CROUS
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # toutes les 5 minutes
+  workflow_dispatch:         # permet de le lancer manuellement pour tester
+
+permissions:
+  contents: write            # nécessaire pour committer seen.json
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run scan
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          RUN_MODE: once
+        run: node index.js
+
+      - name: Sauvegarder les annonces déjà vues
+        run: |
+          git config user.name "crous-bot"
+          git config user.email "crous-bot@users.noreply.github.com"
+          git add seen.json
+          git diff --quiet --cached || git commit -m "update seen.json [skip ci]"
+          git push || true
