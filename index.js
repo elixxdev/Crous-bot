@@ -117,6 +117,28 @@ async function sendDiscordAlert(listing) {
   }
 }
 
+async function fetchWithRetry(url, maxAttempts = 4) {
+  const delays = [3000, 8000, 15000]; // délais entre tentatives (ms)
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const { data } = await axios.get(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        },
+        timeout: 20000
+      });
+      return data;
+    } catch (err) {
+      const status = err.response?.status;
+      console.warn(`⚠️  Tentative ${attempt}/${maxAttempts} échouée (${status || err.code || err.message})`);
+      if (attempt === maxAttempts) throw err;
+      await new Promise(r => setTimeout(r, delays[attempt - 1] || 15000));
+    }
+  }
+}
+
 async function scanOnce() {
   const config = loadConfig();
   const seen = loadSeen();
@@ -124,10 +146,7 @@ async function scanOnce() {
 
   for (const url of config.searchUrls) {
     try {
-      const { data: html } = await axios.get(url, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrousLogementBot/1.0)' },
-        timeout: 15000
-      });
+      const html = await fetchWithRetry(url);
 
       const listings = parseListingsFromHtml(html, url);
       console.log(`🔎 ${listings.length} annonce(s) trouvée(s) sur ${url}`);
@@ -141,7 +160,7 @@ async function scanOnce() {
         newCount++;
       }
     } catch (err) {
-      console.error(`❌ Erreur en scannant ${url}:`, err.message);
+      console.error(`❌ Site injoignable après plusieurs tentatives pour ${url}: ${err.message}. On réessaiera au prochain cycle.`);
     }
   }
 
